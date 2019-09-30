@@ -58,8 +58,8 @@ pub struct CrateInfo {
     pub recent_downloads: usize,
     pub change_in_downloads: Option<usize>,
     pub change_in_recent: Option<isize>,
-    pub reverse_deps: Vec<ReverseDep>,
     pub last_checked: chrono::DateTime<chrono::Utc>,
+    pub reverse_deps: Vec<ReverseDep>,
 }
 
 pub fn get_crates(user_id: usize) -> Result<Vec<(CrateInfo, String)>, Box<dyn ::std::error::Error>> {
@@ -93,7 +93,13 @@ pub fn get_rev_deps(endpoint: &str) -> Result<ReverseDepsResponse, Box<dyn ::std
                 eprintln!("{}", body);
                 Err(Box::new(::std::io::Error::from(::std::io::ErrorKind::Other)))
             } else {
-                let ret = res.json()?;
+                let body = res.text()?;
+                let parsed = serde_json::from_str(&body);
+                if !parsed.is_ok() {
+                    eprintln!("Error parsing json");
+                    eprintln!("{}", body);
+                }
+                let ret = parsed?;
                 Ok(ret)
             }
         }
@@ -144,6 +150,7 @@ use lettre::{Transport, SmtpClient};
 use lettre_email::EmailBuilder;
     let email = EmailBuilder::new()
         .to("r.f.masen@gmail.com")
+        .from("rfm@wiredforge.com")
         .subject("Crate Change Report")
         .text(msg)
         .build()?;
@@ -154,11 +161,48 @@ use lettre_email::EmailBuilder;
 
 #[cfg(not(feature = "email"))]
 pub fn send_message(msg: &str) -> Result<(), Box<dyn ::std::error::Error>> {
-    use lettre::{Transport, FileTransport};
+    use lettre::{Transport, FileTransport, SendableEmail, file::error::FileResult, Envelope};
     use lettre_email::EmailBuilder;
+    struct ReadableFileTransport {
+        path: ::std::path::PathBuf,
+    }
+    #[derive(Serialize)]
+    struct ReadableEmail {
+        envelope: Envelope,
+        message_id: String,
+        message: String
+    }
+    impl ReadableFileTransport {
+    /// Creates a new transport to the given directory
+    pub fn new<P: AsRef<::std::path::Path>>(path: P) -> ReadableFileTransport {
+        ReadableFileTransport {
+            path: ::std::path::PathBuf::from(path.as_ref()),
+        }
+    }
+}
+    impl<'a> Transport<'a> for ReadableFileTransport {
+        type Result = FileResult;
+
+        fn send(&mut self, email: SendableEmail) -> FileResult {
+            let message_id = email.message_id().to_string();
+            let envelope = email.envelope().clone();
+
+            let file = self.path.join(&format!("crate_change_message{}.json", chrono::Utc::now().format("%Y%m%d%H%M%S%Z")));
+
+            let serialized = serde_json::to_string(&ReadableEmail {
+                envelope,
+                message_id,
+                message: email.message_to_string()?,
+            })?;
+
+            ::std::fs::write(&file, serialized)?;
+            Ok(())
+        }
+    }
     let email = EmailBuilder::new()
         .to("r.f.masen@gmail.com")
         .subject("Crate Change Report")
+        .from("rfm@wiredforge.com")
         .text(msg)
         .build()?;
     let base = if let Some(home) = dirs::home_dir() {
@@ -166,8 +210,12 @@ pub fn send_message(msg: &str) -> Result<(), Box<dyn ::std::error::Error>> {
     } else {
         ::std::path::PathBuf::from("")
     };
-
-    let mut mailer = FileTransport::new(base.join(&format!("crate_change_message{}.msg", chrono::Utc::now())));
-    mailer.send(email.into())?;
+    // let msg_path = base.join(&format!("crate_change_message{}.msg", chrono::Utc::now().format("%Y%m%d%H%M%S%Z")));
+    println!("saving msg to {:?}", base);
+    let mut mailer = ReadableFileTransport::new(&base);
+    mailer.send(email.into()).map_err(|e| {
+        eprintln!("Failed to send");
+        e
+    })?;
     Ok(())
 }
