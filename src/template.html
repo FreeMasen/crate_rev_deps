@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <h1>Crate Change Report</h1>
+        {% for crate in crates %}
+            <table style="border-collapse:collapse;border:1px solid black;margin-bottom:5px;min-width:500px;text-align:center">
+                <thead>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="5">
+                            {{ crate.info.name }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th colspan="5" style="border-bottom:1px solid black;border-top:1px solid black;">Changes</th>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">New</th>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="3" style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.changes.new_crate }}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">Large Download Change</th>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="3" style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.changes.large_change_in_dl}}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">New Reverse Dependency</th>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="3">{{ crate.changes.new_rev_dep}}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">Info</th>
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;">New</th>
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;">Old</th>
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;">Diff</th>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">Current Version</th>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.info.current_version }}</td>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.old_info.current_version }}</td>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">N/A</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">Downloads</th>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.info.downloads }}</td>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.old_info.downloads }}</td>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.info.downloads - crate.old_info.downloads }}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="2">Recent Downloads</th>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.info.recent_downloads }}</td>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.old_info.recent_downloads }}</td>
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ crate.info.recent_downloads - crate.old_info.recent_downloads }}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="5">New Reverse Dependencies</th>
+                    </tr>
+                    {% if crate.info.reverse_deps | length == 0 %}
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="5">None</td>
+                    </tr>
+                    {% endif %}
+                    {% for dep in crate.info.reverse_deps %}
+                        <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                            <td style="border-bottom:1px solid black;border-top:1px solid black;width:50px">{{ dep.id }}</td>
+                            <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="3">{{ dep.name }}</td>
+                            <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ dep.version }}</td>
+                        </tr>
+                    {% endfor %}
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <th style="border-bottom:1px solid black;border-top:1px solid black;" colspan="5">Old Reverse Dependencies</th>
+                    </tr>
+                    {% if crate.old_info.reverse_deps | length == 0 %}
+                    <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                        <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="5">None</td>
+                    </tr>
+                    {% endif %}
+                    {% for dep in crate.old_info.reverse_deps %}
+                        <tr style="border-bottom:1px solid black;border-top:1px solid black;">
+                            <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ dep.id }}</td>
+                            <td style="border-bottom:1px solid black;border-top:1px solid black;" colspan="3">{{ dep.name }}</td>
+                            <td style="border-bottom:1px solid black;border-top:1px solid black;">{{ dep.version }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </body>
+</html>

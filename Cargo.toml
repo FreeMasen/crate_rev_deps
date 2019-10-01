@@ -17,3 +17,4 @@ dirs = "2"
 chrono = { version = "0.4", features = ["serde"] }
 lettre = "0.9"
 lettre_email = "0.9"
+tera = "0"

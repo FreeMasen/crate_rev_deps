@@ -1,7 +1,6 @@
 use toml::to_string_pretty;
 mod lib;
 use lib::CrateInfo;
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[macro_use]
@@ -18,38 +17,18 @@ lazy_static! {
     };
 }
 
-static DIV: &str = "----------";
 
 fn main() -> Result<(), Box<dyn ::std::error::Error>> {
     println!("working from {}", BASE_PATH.display());
     let known = get_known()?;
     let server = get_server()?;
     let changes = lib::perform_analysis(&server, &known);
-    let server_map: HashMap<String, &CrateInfo> = server.iter().map(|c| (c.name.to_string(), c)).collect();
-    let mut send = false;
-    let mut message = String::from("Crate Change Report");
-    message.push('\n');
-    message.push_str(DIV);
-    message.push('\n');
-    message.push_str(DIV);
-    message.push('\n');
-    for (name, change) in changes {
-        if change.any_changes() {
-            send = true;
-            message.push_str(DIV);
-            message.push('\n');
-            if let Some(info) = server_map.get(&name) {
-                message.push_str(&to_string_pretty(&info)?);
-                message.push('\n');
-            } else {
-                message.push_str(&format!("unknown changes for {}\n", name))
-            }
-        }
-    }
+    let message = lib::generate_html(&changes)?;
+    
     for ref c in server {
         write_crate_info(c)?;
     }
-    if send {
+    if changes.iter().any(|c| c.any_changes()) {
         lib::send_message(&message)?;
     }
     println!("COMPLETE!");
