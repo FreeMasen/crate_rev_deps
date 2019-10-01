@@ -37,6 +37,7 @@ fn main() -> Result<(), Box<dyn ::std::error::Error>> {
         if change.any_changes() {
             send = true;
             message.push_str(DIV);
+            message.push('\n');
             if let Some(info) = server_map.get(&name) {
                 message.push_str(&to_string_pretty(&info)?);
                 message.push('\n');

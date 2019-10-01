@@ -150,7 +150,7 @@ use lettre::{Transport, SmtpClient};
 use lettre_email::EmailBuilder;
     let email = EmailBuilder::new()
         .to("r.f.masen@gmail.com")
-        .from("rfm@wiredforge.com")
+        .from("r@robertmasen.pizza")
         .subject("Crate Change Report")
         .text(msg)
         .build()?;
