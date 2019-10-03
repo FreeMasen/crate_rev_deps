@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn ::std::error::Error>> {
 }
 
 fn write_crate_info(c: &CrateInfo) -> Result<(), Box<dyn ::std::error::Error>> {
-    let path = BASE_PATH.join(&c.name);
+    let path = BASE_PATH.join(&format!("{}.toml", c.name));
     ::std::fs::write(&path, to_string_pretty(c)?)?;
     Ok(())
 }
